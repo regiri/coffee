@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5 import uic
+from addEditForm import MyForm
 import sqlite3
 
 
@@ -30,7 +31,7 @@ class MyWidget(QMainWindow):
         self.setFixedSize(self.size())
         res = self.cur.execute("select * from coffee").fetchall()
         self.tableWidget.setColumnCount(6)
-        self.tableWidget.setRowCount(len(res))
+        self.tableWidget.setRowCount(len(res) + 1)
         self.tableWidget.setHorizontalHeaderLabels(
             ["Название сорта", "Степень обжарки", "Тип", "Описание вкуса", "Цена", "Объем упаковки"]
         )
@@ -41,6 +42,35 @@ class MyWidget(QMainWindow):
                 item.setTextAlignment(Qt.AlignHCenter)
                 self.tableWidget.setItem(i, j, item)
         self.tableWidget.resizeColumnsToContents()
+        self.tableWidget.cellClicked.connect(self.create_form)
+
+    def update_table(self):
+        self.tableWidget.clear()
+        res = self.cur.execute("select * from coffee").fetchall()
+        self.tableWidget.setColumnCount(6)
+        self.tableWidget.setHorizontalHeaderLabels(
+            ["Название сорта", "Степень обжарки", "Тип", "Описание вкуса", "Цена", "Объем упаковки"]
+        )
+        self.tableWidget.setRowCount(len(res) + 1)
+        for i in range(len(res)):
+            for j in range(len(res[i])):
+                item = QTableWidgetItem(str(res[i][j]), Qt.ItemIsEnabled)
+                item.setTextAlignment(Qt.AlignHCenter)
+                self.tableWidget.setItem(i, j, item)
+        self.tableWidget.resizeColumnsToContents()
+
+
+    def create_form(self, cell):
+        if cell < self.tableWidget.rowCount() - 1:
+            res = []
+            for i in range(self.tableWidget.columnCount()):
+                res.append(self.tableWidget.item(cell, i).text())
+            form = MyForm(*res)
+            form.exec_()
+        else:
+            form = MyForm()
+            form.exec_()
+        self.update_table()
 
 
 if __name__ == "__main__":
